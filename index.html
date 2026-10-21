@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>工业相机 &amp; 镜头选型计算器</title>
+<style>
+  :root{
+    --bg:#f4f6fa; --card:#ffffff; --line:#e3e8f0; --txt:#1f2937; --sub:#6b7280;
+    --pri:#2563eb; --pri-d:#1d4ed8; --ok:#059669; --warn:#d97706; --bad:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+       font-family:"Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.6}
+  header{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:18px 24px}
+  header h1{margin:0;font-size:20px;font-weight:600}
+  header p{margin:4px 0 0;font-size:13px;opacity:.9}
+  .wrap{display:grid;grid-template-columns:400px 1fr;gap:16px;padding:16px;max-width:1500px;margin:0 auto;align-items:start}
+  @media(max-width:1000px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;box-shadow:0 1px 3px rgba(16,24,40,.05)}
+  .card h2{margin:0 0 12px;font-size:15px;font-weight:600;color:#1e3a8a;border-bottom:1px solid var(--line);padding-bottom:8px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:3px}
+  label b{color:var(--bad);font-weight:400}
+  input,select{width:100%;padding:7px 9px;border:1px solid #cfd6e4;border-radius:6px;font-size:14px;
+               font-family:inherit;background:#fff;color:var(--txt)}
+  input:focus,select:focus{outline:2px solid #bfdbfe;border-color:var(--pri)}
+  .field{margin-bottom:10px}
+  .hint{font-size:11.5px;color:#9aa3b2;margin-top:2px}
+  .btns{display:flex;gap:8px;margin-top:14px}
+  button{flex:1;padding:9px 10px;border:0;border-radius:7px;font-size:14px;font-family:inherit;cursor:pointer}
+  .btn-p{background:var(--pri);color:#fff}.btn-p:hover{background:var(--pri-d)}
+  .btn-s{background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe!important}
+  .btn-g{background:#f3f4f6;color:#374151;border:1px solid var(--line)!important}
+  button:hover{filter:brightness(.97)}
+  .err{display:none;background:#fef2f2;color:var(--bad);border:1px solid #fecaca;border-radius:6px;
+       padding:8px 10px;font-size:13px;margin-top:10px}
+  .banner{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:16px}
+  .bitem{background:#f8faff;border:1px solid #dbe4ff;border-radius:8px;padding:10px 12px}
+  .bitem .t{font-size:12px;color:var(--sub)}
+  .bitem .v{font-size:16px;font-weight:600;color:#1e3a8a;word-break:break-all}
+  .bitem .v small{font-weight:400;font-size:12px;color:var(--sub)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  .tblbox{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+  th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;white-space:nowrap}
+  th{background:#f1f5fb;font-weight:600;font-size:12.5px;color:#334155;position:sticky;top:0}
+  tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#f8faff}
+  .sub{font-size:11.5px;color:var(--sub);white-space:normal}
+  .badge{display:inline-block;padding:1px 8px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap}
+  .b-ok{background:#ecfdf5;color:var(--ok)}.b-warn{background:#fffbeb;color:var(--warn)}.b-bad{background:#fef2f2;color:var(--bad)}
+  .notes{margin:16px 0 0;padding:0;list-style:none}
+  .notes li{padding:7px 10px;border-radius:6px;margin-bottom:6px;font-size:13px;border:1px solid}
+  .n-info{background:#f0f9ff;border-color:#bae6fd;color:#0369a1}
+  .n-warn{background:#fffbeb;border-color:#fde68a;color:#92400e}
+  .n-good{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
+  .n-bad{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+  details{margin-top:14px;border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:#fbfcfe}
+  summary{cursor:pointer;font-weight:600;color:#334155;font-size:13.5px}
+  .formula{font-family:Consolas,monospace;font-size:12.5px;background:#f1f5f9;border-radius:6px;padding:8px 10px;margin:8px 0;white-space:pre-wrap}
+  .sect{margin-top:18px}
+  .sect h3{font-size:14px;color:#1e3a8a;margin:0 0 8px}
+  footer{text-align:center;color:#9aa3b2;font-size:12px;padding:12px 0 24px}
+  @media print{
+    header{background:#fff;color:#000;border-bottom:2px solid #000}
+    header p{color:#333}
+    .btns,button{display:none!important}
+    .wrap{display:block;padding:0}
+    body{background:#fff}
+    .card{border:0;box-shadow:none;padding:0}
+    .tblbox{overflow:visible}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>工业相机 &amp; 镜头选型计算器</h1>
+  <p>输入最大视野与精度要求 → 自动计算相机分辨率、推荐传感器、镜头焦距 / 解像力 / 景深，并提示线阵与远心方案</p>
+</header>
+
+<div class="wrap">
+  <!-- ================= 输入 ================= -->
+  <section class="card">
+    <h2>① 输入参数</h2>
+
+    <div class="grid2">
+      <div class="field">
+        <label>最大视野 宽 <b>*</b>（mm）</label>
+        <input type="number" id="fovW" value="200" min="0" step="any">
+      </div>
+      <div class="field">
+        <label>最大视野 高 <b>*</b>（mm）</label>
+        <input type="number" id="fovH" value="150" min="0" step="any">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>精度要求 <b>*</b>（mm）</label>
+        <input type="number" id="prec" value="0.1" min="0" step="any">
+        <div class="hint">单边检测/测量精度</div>
+      </div>
+      <div class="field">
+        <label>安全系数 k</label>
+        <select id="kSel">
+          <option value="2" selected>2（常规，有亚像素算法）</option>
+          <option value="2.5">2.5</option>
+          <option value="3">3（保守，高可靠性）</option>
+        </select>
+        <div class="hint">一个特征需占 k 个像素</div>
+      </div>
+    </div>
+
+    <label style="margin-top:4px">工作距离 WD（mm，选填，可只填“最佳”）</label>
+    <div class="grid3">
+      <div class="field"><input type="number" id="wdMin" placeholder="最小" min="0" step="any"></div>
+      <div class="field"><input type="number" id="wdPref" placeholder="最佳" value="500" min="0" step="any"></div>
+      <div class="field"><input type="number" id="wdMax" placeholder="最大" min="0" step="any"></div>
+    </div>
+
+    <div class="grid3">
+      <div class="field">
+        <label>被测面高度差 Δh（mm）</label>
+        <input type="number" id="dh" placeholder="选填" min="0" step="any">
+      </div>
+      <div class="field">
+        <label>光圈 F 数</label>
+        <input type="number" id="fnum" value="4" min="1" step="any">
+      </div>
+      <div class="field">
+        <label>运动速度（mm/s）</label>
+        <input type="number" id="speed" placeholder="选填" min="0" step="any">
+      </div>
+    </div>
+
+    <details style="margin-top:6px">
+      <summary>自定义传感器（选填，库中没有时）</summary>
+      <div class="grid3" style="margin-top:10px">
+        <div class="field"><label>横向像素</label><input type="number" id="cwW" placeholder="如 5472" min="1" step="1"></div>
+        <div class="field"><label>纵向像素</label><input type="number" id="cwH" placeholder="如 3648" min="1" step="1"></div>
+        <div class="field"><label>像素尺寸 μm</label><input type="number" id="cwP" placeholder="如 2.4" min="0" step="any"></div>
+      </div>
+      <div class="field"><label>名称备注</label><input type="text" id="cwName" placeholder="如 XX型号相机"></div>
+    </details>
+
+    <div class="btns">
+      <button class="btn-p" id="btnCalc">计算选型</button>
+      <button class="btn-s" id="btnSample">载入示例</button>
+    </div>
+    <div class="btns">
+      <button class="btn-g" id="btnCopy">复制计算报告</button>
+      <button class="btn-g" id="btnPrint">打印 / 存 PDF</button>
+    </div>
+    <div class="err" id="err"></div>
+  </section>
+
+  <!-- ================= 输出 ================= -->
+  <section>
+    <div class="card">
+      <h2>② 计算结果</h2>
+      <div id="out"></div>
+    </div>
+  </section>
+</div>
+
+<footer>本工具为高斯光学近似计算，实际选型请结合镜头畸变、照明、标定与机械条件复核。</footer>
+
+<script>
+/* ===================== 数据库 ===================== */
+// 常用工业面阵传感器（像素数、像素尺寸 μm）
+var SENSORS = [
+  {n:'Sony IMX273',            w:1440, h:1080,  p:3.45, note:'Pregius 全局快门'},
+  {n:'Sony IMX392',            w:1936, h:1096,  p:3.45, note:'Pregius 全局快门'},
+  {n:'Sony IMX252 / IMX265',   w:2048, h:1536,  p:3.45, note:'Pregius 全局快门'},
+  {n:'Sony IMX250 / IMX264',   w:2448, h:2048,  p:3.45, note:'Pregius 全局快门'},
+  {n:'Sony IMX178',            w:3072, h:2048,  p:2.40, note:'Starvis'},
+  {n:'Sony IMX334',            w:3840, h:2160,  p:2.00, note:'Starvis2'},
+  {n:'Sony IMX253 / IMX267',   w:4096, h:3000,  p:3.45, note:'Pregius 全局快门'},
+  {n:'Sony IMX183',            w:5496, h:3672,  p:2.40, note:'Starvis 卷帘快门'},
+  {n:'ON Semi PYTHON2000',     w:1920, h:1200,  p:4.80, note:'全局快门'},
+  {n:'ON Semi PYTHON5000',     w:2592, h:1944,  p:4.80, note:'全局快门'},
+  {n:'Sony IMX342',            w:7264, h:5448,  p:2.74, note:'全局快门'},
+  {n:'Sony IMX530',            w:8866, h:5880,  p:2.74, note:'Pregius 全局快门 APS-C'}
+];
+var FOCALS = [4,6,8,8.5,12,16,25,35,50,75,100,150,200];          // 常见定焦焦距 mm
+var MPCLASS = [0.5,1.2,2,3,5,6,8,9,12,16,20,25,29,45,51,61,80,121]; // 镜头像素等级 MP
+var FORMATS = [[4.0,'1/4″'],[6.0,'1/3″'],[6.4,'1/2.9″'],[6.7,'1/2.8″'],[8.0,'1/2″'],
+               [8.9,'1/1.8″'],[11.1,'2/3″'],[13.4,'1/1.2″'],[15.9,'1″'],[17.6,'1.1″'],
+               [21.9,'4/3″'],[28.4,'APS-C'],[43.3,'全画幅']];
+var LINEPX = [2048,4096,8192,12288,16384];                        // 线阵像素档位
+
+/* ===================== 核心计算 ===================== */
+function fmtLabel(w,h){
+  var d = Math.sqrt(w*w+h*h), hits=[];
+  for(var i=0;i<FORMATS.length;i++){
+    if(Math.abs(d-FORMATS[i][0])/FORMATS[i][0] <= 0.08) hits.push(FORMATS[i][1]);
+  }
+  return (hits.length? hits.join(' / ') : '非标') + ' ≈' + d.toFixed(1) + 'mm';
+}
+function mpClass(mp){
+  for(var i=0;i<MPCLASS.length;i++){ if(MPCLASS[i] >= mp) return MPCLASS[i]; }
+  return Math.ceil(mp);
+}
+function pickFocal(beta, pref, min, max){
+  var best=null;
+  for(var i=0;i<FOCALS.length;i++){
+    var f=FOCALS[i], wd=f*(1+beta)/beta;
+    var ok = (min==null||wd>=min) && (max==null||wd<=max);
+    var score = (ok?0:1e6) + Math.abs(Math.log(wd/pref));
+    if(!best || score<best.score) best={f:f, wd:wd, ok:ok, score:score};
+  }
+  return best;
+}
+function compute(i){
+  var deltaReq = i.prec / i.k;                       // 目标像素当量 mm/px
+  var nx = Math.ceil(i.fovW / deltaReq);             // 所需最小分辨率
+  var ny = Math.ceil(i.fovH / deltaReq);
+  var betaMax = 0;
+  var sensors = SENSORS.slice();
+  if(i.custom && i.custom.w && i.custom.h && i.custom.p){
+    sensors.unshift({n:(i.custom.name||'自定义传感器'), w:i.custom.w, h:i.custom.h, p:i.custom.p, note:'自定义'});
+  }
+  // 逐个传感器计算
+  var rows=[], misses=[];
+  for(var s=0;s<sensors.length;s++){
+    var sen=sensors[s];
+    var sw = sen.w*sen.p/1000, sh = sen.h*sen.p/1000;   // 传感器物理尺寸 mm
+    var beta = Math.min(sw/i.fovW, sh/i.fovH);          // 能覆盖双向视野的最大倍率
+    var rec = {
+      name:sen.n, note:sen.note, w:sen.w, h:sen.h, pitch:sen.p,
+      mp:+(sen.w*sen.h/1e6).toFixed(1), format:fmtLabel(sw, sh),
+      beta:beta, fits:(sen.w>=nx && sen.h>=ny)
+    };
+    if(rec.fits){
+      rec.deltaA = sen.p/1e3 / beta;                 // 实际像素当量 mm/px
+      rec.redund = (1 - rec.deltaA/deltaReq)*100;
+      var pf = pickFocal(beta, i.wdPref, i.wdMin, i.wdMax);
+      rec.focal = pf.f; rec.wd = pf.wd; rec.wdOk = pf.ok;
+      rec.fOpt = i.wdPref * beta / (1+beta);
+      rec.dofHalf = rec.deltaA * i.fnum * (1+beta)/(beta*beta); // 景深半量 mm
+      rec.lensMP = mpClass(rec.mp);
+      rec.lensLp = Math.ceil(1000/(2*sen.p));        // 需求解像力 lp/mm (奈奎斯特)
+      var st=[], lvl='ok';
+      if(!pf.ok){ st.push('工作距离超范围'); lvl='warn'; }
+      if(i.dh>0 && i.dh > rec.dofHalf){ st.push('高度差超景深'); lvl='warn'; }
+      if(i.dh>0 && pf.wd-i.dh>0){
+        var err=(i.fovW/2)*i.dh/(pf.wd-i.dh);
+        if(err>i.prec){ st.push('建议远心镜头'); lvl='warn'; }
+      }
+      rec.teleErr = (i.dh>0 && pf.wd-i.dh>0) ? (i.fovW/2)*i.dh/(pf.wd-i.dh) : null;
+      rec.status = lvl; rec.statusText = st.length? ('⚠ '+st.join('、')) : '✓ 适配';
+      rows.push(rec);
+    }else{
+      rec.deficit = Math.max(nx/sen.w, ny/sen.h);
+      misses.push(rec);
+    }
+  }
+  rows.sort(function(a,b){ return a.mp-b.mp; });
+  misses.sort(function(a,b){ return a.deficit-b.deficit; });
+
+  var notes=[], best = rows[0]||null;
+
+  // 线阵建议
+  var needPx = Math.max(nx, ny);
+  var lineScan = null;
+  if(!rows.length || needPx > 8866 || nx*ny > 52e6){
+    var choose = LINEPX[LINEPX.length-1];
+    for(var L=0;L<LINEPX.length;L++){ if(LINEPX[L]>=needPx){ choose=LINEPX[L]; break; } }
+    var longFov = (nx>=ny? i.fovW : i.fovH);
+    lineScan = {needPx:needPx, px:choose, delta:longFov/choose,
+                dir:(nx>=ny?'水平':'垂直'), enough:(choose>=needPx),
+                rate:(i.speed>0? Math.ceil(i.speed/(longFov/choose)) : null)};
+    if(!lineScan.enough)
+      notes.push({t:'bad', x:'所需 '+needPx+' 像素/线，已超过市面最大 16K 线阵：需双线阵（或多相机）拼接、分区拍摄，或与客户协商放宽精度 / 缩小视野。'});
+  }
+
+  // 提示
+  if(!best){
+    notes.push({t:'bad', x:'现有面阵传感器均不满足 '+nx+'×'+ny+' px 的分辨率需求，建议改用线阵相机（见下方）或多相机拼接。'});
+    if(i.dh>0) notes.push({t:'info', x:'存在被测面高度差 '+i.dh+' mm：最终方案确定后请复核景深是否足够、是否需要远心镜头。'});
+  }else{
+    if(best.mp>=40) notes.push({t:'warn', x:'最优方案已达 '+best.mp+'MP 面阵，相机成本高；若被测物可匀速运动，线阵方案通常更经济（见下方）。'});
+    if(best.pitch<=2.4 && best.lensLp>=150)
+      notes.push({t:'warn', x:'像素尺寸仅 '+best.pitch+'μm，镜头解像力需 ≥'+best.lensLp+' lp/mm，必须配高清（≥'+best.lensMP+'MP 等级）镜头，普通镜头无法达到标称精度。'});
+    notes.push({t:'good', x:'推荐方案实际像素当量 '+best.deltaA.toFixed(4)+' mm/px'+(best.redund>0.5? '，优于目标 '+deltaReq.toFixed(4)+' mm/px（冗余 '+best.redund.toFixed(0)+'%）' : '，正好满足目标 '+deltaReq.toFixed(4)+' mm/px')+'。'});
+  }
+  if(i.dh>0 && best){
+    if(best.teleErr!=null && best.teleErr>i.prec)
+      notes.push({t:'warn', x:'被测面高度差 '+i.dh+'mm 引起的位置/倍率误差约 '+best.teleErr.toFixed(3)+'mm，超过精度要求，强烈建议远心镜头（注意远心镜头有最大视野上限、价格较高）。'});
+    if(i.dh>best.dofHalf)
+      notes.push({t:'warn', x:'高度差 '+i.dh+'mm 超出景深 ±'+best.dofHalf.toFixed(1)+'mm，存在离焦风险：可减小光圈、降低倍率或改用远心镜头。'});
+  }
+  if(i.speed>0 && best){
+    var t = best.deltaA/(2*i.speed)*1000;
+    notes.push({t:'info', x:'运动速度 '+i.speed+' mm/s：为控制运动模糊（≤½像素），曝光时间建议 ≤ '+t.toFixed(2)+' ms，需足够亮度的光源/频闪。'});
+  }
+  notes.push({t:'info', x:'尺寸测量类应用请选畸变 <0.1% 的测量级镜头并做标定补偿；一般有无标定的检测 <0.5% 即可。'});
+  notes.push({t:'info', x:'有运动目标优先选全局快门（Global Shutter）相机；线阵方案需编码器同步与条形光源。'});
+  notes.push({t:'info', x:'计算为高斯光学近似，未计入镜头畸变、标定误差与机械振动，建议按结果留 ≥20% 余量，并核对镜头支持靶面 ≥ 相机靶面、接口（C 口 / M42 / F 口）匹配。'});
+
+  return {
+    inputs:i, deltaReq:deltaReq, nx:nx, ny:ny,
+    needMP:+(nx*ny/1e6).toFixed(1), betaMax:best?best.beta:null,
+    rows:rows, best:best, nearMiss:misses.slice(0,3), lineScan:lineScan, notes:notes
+  };
+}
+
+/* ===================== 界面渲染 ===================== */
+function num(id){ var v=document.getElementById(id).value; return v===''? null : Number(v); }
+function readInputs(){
+  var errs=[];
+  var i = {
+    fovW:num('fovW'), fovH:num('fovH'), prec:num('prec'),
+    k:Number(document.getElementById('kSel').value),
+    wdMin:num('wdMin'), wdPref:num('wdPref')==null?300:num('wdPref'), wdMax:num('wdMax'),
+    dh:num('dh')||0, fnum:num('fnum')||4, speed:num('speed')||0
+  };
+  if(!(i.fovW>0)) errs.push('请填写最大视野宽度（mm）');
+  if(!(i.fovH>0)) errs.push('请填写最大视野高度（mm）');
+  if(!(i.prec>0)) errs.push('请填写精度要求（mm）');
+  var cwW=num('cwW'), cwH=num('cwH'), cwP=num('cwP');
+  if(cwW&&cwH&&cwP) i.custom={w:cwW,h:cwH,p:cwP,name:document.getElementById('cwName').value};
+  return {i:i, errs:errs};
+}
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function rowHtml(r,i){
+  var badge = r.status==='ok' ? '<span class="badge b-ok">'+r.statusText+'</span>'
+                              : '<span class="badge b-warn">'+r.statusText+'</span>';
+  return '<tr>'+
+    '<td><b>'+esc(r.name)+'</b><div class="sub">'+esc(r.note)+'</div></td>'+
+    '<td>'+r.w+'×'+r.h+'<div class="sub">'+r.mp+'MP / '+r.pitch+'μm</div></td>'+
+    '<td>'+r.format+'</td>'+
+    '<td>'+r.beta.toFixed(3)+'</td>'+
+    '<td>'+r.deltaA.toFixed(4)+' mm/px<div class="sub">冗余 '+Math.max(0,r.redund).toFixed(0)+'%</div></td>'+
+    '<td><b>'+r.focal+' mm</b> 定焦<div class="sub">精确值 '+r.fOpt.toFixed(1)+'mm</div></td>'+
+    '<td>≈'+r.wd.toFixed(0)+' mm<div class="sub">'+(r.wdOk?'在给定范围内':'⚠ 超出给定范围')+'</div></td>'+
+    '<td>±'+r.dofHalf.toFixed(1)+' mm<div class="sub">F/'+i.fnum+'</div></td>'+
+    '<td>≥'+r.lensMP+'MP 等级<div class="sub">解像力 ≥'+r.lensLp+' lp/mm<br>靶面 ≥ '+r.format.split(' ')[0]+'</div></td>'+
+    '<td>'+badge+'</td></tr>';
+}
+function render(R){
+  var i=R.inputs, out=document.getElementById('out'), h='';
+  // 汇总卡片
+  h+='<div class="banner">'+
+     '<div class="bitem"><div class="t">所需最小分辨率</div><div class="v">'+R.nx+' × '+R.ny+' <small>px</small></div><div class="sub">≈ '+R.needMP+' MP</div></div>'+
+     '<div class="bitem"><div class="t">目标像素当量 (k='+i.k+')</div><div class="v">'+R.deltaReq.toFixed(4)+' <small>mm/px</small></div><div class="sub">精度 '+i.prec+'mm ÷ '+i.k+'</div></div>'+
+     '<div class="bitem"><div class="t">推荐相机</div><div class="v">'+(R.best? esc(R.best.name):'— 需线阵')+'</div><div class="sub">'+(R.best? R.best.w+'×'+R.best.h+' / '+R.best.pitch+'μm / 靶面 '+R.best.format.split(' ')[0] : '面阵无解')+'</div></div>'+
+     '<div class="bitem"><div class="t">推荐镜头</div><div class="v">'+(R.best? R.best.focal+' mm 定焦':'—')+'</div><div class="sub">'+(R.best? '≥'+R.best.lensMP+'MP 等级 · ≥'+R.best.lensLp+' lp/mm · 工作距离≈'+R.best.wd.toFixed(0)+'mm' : '')+'</div></div>'+
+     '</div>';
+
+  // 面阵候选表
+  if(R.rows.length){
+    h+='<div class="tblbox"><table><thead><tr>'+
+       '<th>传感器</th><th>分辨率 / 像素</th><th>靶面</th><th>倍率 β</th><th>实际像素当量</th>'+
+       '<th>推荐镜头</th><th>工作距离</th><th>景深</th><th>镜头要求</th><th>状态</th>'+
+       '</tr></thead><tbody>';
+    for(var k=0;k<Math.min(R.rows.length,12);k++) h+=rowHtml(R.rows[k],i);
+    h+='</tbody></table></div>';
+    h+='<div class="hint" style="margin-top:6px">按“满足分辨率的最小传感器”排序，越靠前相机成本通常越低；'+R.rows.length+' 个方案满足精度要求。</div>';
+  }else{
+    h+='<div class="tblbox"><table><thead><tr><th>传感器</th><th>分辨率</th><th>缺口倍数</th><th>状态</th></tr></thead><tbody>';
+    for(var m=0;m<R.nearMiss.length;m++){
+      var q=R.nearMiss[m];
+      h+='<tr><td>'+esc(q.n||q.name)+'</td><td>'+q.w+'×'+q.h+'</td><td>差 '+q.deficit.toFixed(2)+' 倍</td><td><span class="badge b-bad">✗ 分辨率不足</span></td></tr>';
+    }
+    h+='</tbody></table></div>';
+  }
+
+  // 线阵建议
+  if(R.lineScan){
+    h+='<div class="sect"><h3>线阵相机建议</h3><div class="card" style="background:#f8faff">'+
+       '<p style="margin:0 0 6px">需要 <b>'+R.lineScan.needPx+'</b> 像素/线，建议选 <b>'+R.lineScan.px+' 像素（'+(R.lineScan.px/1024).toFixed(0)+'K）</b>线阵相机，沿<b>'+R.lineScan.dir+'</b>方向扫描'+(R.lineScan.enough?'':'（<span style="color:#dc2626">该档位仍不满足，需拼接或放宽指标</span>）')+'。</p>'+
+       '<p style="margin:0 0 6px">线阵像素当量 ≈ <b>'+R.lineScan.delta.toFixed(4)+' mm/px</b>'+(R.lineScan.rate? '，所需线频 ≥ <b>'+R.lineScan.rate+' Hz</b>（需编码器同步，速度波动会影响精度）':'（填入运动速度可计算所需线频）')+'。</p>'+
+       '<p style="margin:0" class="sub">线阵需匀速机构 + 条形光源 + 编码器；若无法保证匀速，改用多面阵拼接或更大面阵传感器。</p></div></div>';
+  }
+
+  // 提示
+  h+='<ul class="notes">';
+  for(var n=0;n<R.notes.length;n++) h+='<li class="n-'+R.notes[n].t+'">'+R.notes[n].x+'</li>';
+  h+='</ul>';
+
+  // 公式
+  h+='<details><summary>计算依据（公式说明，可给客户核对）</summary>'+
+     '<div class="formula">1) 像素当量      δ = 精度要求 ÷ k            （k=2~3，一个特征至少占 k 个像素）\n'+
+     '2) 所需分辨率    N = 视野 ÷ δ              （双向分别计算，向上取整）\n'+
+     '3) 成像倍率      β = 传感器尺寸 ÷ 视野     （取双向较小值以保证全覆盖）\n'+
+     '4) 镜头焦距      f = WD × β ÷ (1+β)        （β 很小时 f ≈ WD × β）\n'+
+     '                反算工作距离 WD = f × (1+β) ÷ β\n'+
+     '5) 镜头解像力    ≥ 1000 ÷ (2 × 像素尺寸μm)  lp/mm（奈奎斯特极限）\n'+
+     '6) 景深          DOF ≈ 2 × δ × F数 × (1+β) ÷ β²\n'+
+     '7) 高度差误差    Δ ≈ (视野/2) × Δh ÷ (WD-Δh)   超精度则需远心镜头</div>'+
+     '<p class="sub">输入条件：视野 '+i.fovW+'×'+i.fovH+' mm，精度 '+i.prec+' mm，k='+i.k+'，工作距离 '+(i.wdMin||'—')+' / '+i.wdPref+' / '+(i.wdMax||'—')+' mm，高度差 '+(i.dh||0)+' mm，光圈 F/'+i.fnum+'，速度 '+(i.speed||0)+' mm/s。</p>'+
+     '</details>';
+
+  out.innerHTML=h;
+  window.__REPORT__ = R;
+}
+
+/* ===================== 报告文本 ===================== */
+function buildReport(R){
+  var i=R.inputs, L=[];
+  L.push('相机 & 镜头选型计算报告');
+  L.push('生成时间：'+new Date().toLocaleString('zh-CN'));
+  L.push('');
+  L.push('【输入条件】');
+  L.push('最大视野：'+i.fovW+' × '+i.fovH+' mm；精度要求：'+i.prec+' mm；安全系数 k='+i.k);
+  L.push('工作距离：'+(i.wdMin||'不限')+' / '+i.wdPref+' / '+(i.wdMax||'不限')+' mm；被测面高度差：'+(i.dh||0)+' mm；光圈 F/'+i.fnum+(i.speed? '；运动速度 '+i.speed+' mm/s':''));
+  L.push('');
+  L.push('【计算结果】');
+  L.push('所需最小分辨率：'+R.nx+' × '+R.ny+' px（≈'+R.needMP+' MP）；目标像素当量：'+R.deltaReq.toFixed(4)+' mm/px');
+  if(R.best){
+    var b=R.best;
+    L.push('推荐相机：'+b.name+'，'+b.w+'×'+b.h+'（'+b.mp+'MP），像素 '+b.pitch+'μm，靶面 '+b.format);
+    L.push('推荐镜头：'+b.focal+' mm 定焦，靶面 ≥ '+b.format.split(' ')[0]+'，≥'+b.lensMP+'MP 等级，解像力 ≥'+b.lensLp+' lp/mm');
+    L.push('成像倍率 β='+b.beta.toFixed(3)+'，实际像素当量 '+b.deltaA.toFixed(4)+' mm/px，工作距离 ≈'+b.wd.toFixed(0)+' mm，景深 ±'+b.dofHalf.toFixed(1)+' mm（F/'+i.fnum+'）');
+    L.push('备选方案：');
+    for(var k=1;k<Math.min(R.rows.length,5);k++){
+      var r=R.rows[k];
+      L.push('  - '+r.name+' '+r.w+'×'+r.h+'（'+r.mp+'MP）+ '+r.focal+'mm 镜头，WD≈'+r.wd.toFixed(0)+'mm');
+    }
+  }else{
+    L.push('面阵方案无解，建议线阵相机。');
+  }
+  if(R.lineScan){
+    L.push('线阵建议：'+R.lineScan.px+' 像素线阵（'+R.lineScan.dir+'向扫描），像素当量 ≈'+R.lineScan.delta.toFixed(4)+' mm/px'
+      +(R.lineScan.rate? '，线频 ≥'+R.lineScan.rate+' Hz':'')
+      +(R.lineScan.enough? '':'；仍不满足所需 '+R.lineScan.needPx+' 像素，需拼接或放宽指标'));
+  }
+  L.push('');
+  L.push('【注意事项】');
+  for(var n=0;n<R.notes.length;n++) L.push('· '+R.notes[n].x);
+  return L.join('\n');
+}
+
+/* ===================== 交互 ===================== */
+function doCalc(){
+  var r=readInputs(), errBox=document.getElementById('err');
+  if(r.errs.length){ errBox.style.display='block'; errBox.innerHTML=r.errs.join('<br>'); return; }
+  errBox.style.display='none';
+  render(compute(r.i));
+}
+function fill(vals){
+  for(var k in vals){ document.getElementById(k).value = vals[k]; }
+  doCalc();
+}
+function initUI(){
+  document.getElementById('btnCalc').onclick = doCalc;
+  document.getElementById('btnSample').onclick = function(){
+    fill({fovW:200, fovH:150, prec:0.1, kSel:'2', wdMin:'', wdPref:500, wdMax:'', dh:'', fnum:4, speed:'', cwW:'', cwH:'', cwP:'', cwName:''});
+  };
+  document.getElementById('btnCopy').onclick = function(){
+    if(!window.__REPORT__) return;
+    var txt = buildReport(window.__REPORT__);
+    if(navigator.clipboard) navigator.clipboard.writeText(txt);
+    this.textContent='已复制 ✓';
+    var b=this; setTimeout(function(){ b.textContent='复制计算报告'; },1500);
+  };
+  document.getElementById('btnPrint').onclick = function(){ window.print(); };
+  ['fovW','fovH','prec','wdPref'].forEach(function(id){
+    document.getElementById(id).addEventListener('keydown', function(e){ if(e.key==='Enter') doCalc(); });
+  });
+  doCalc(); // 打开即显示示例结果
+}
+if(typeof document!=='undefined' && document.getElementById) initUI();
+if(typeof module!=='undefined') module.exports = {compute:compute, fmtLabel:fmtLabel, mpClass:mpClass};
+</script>
+</body>
+</html>
